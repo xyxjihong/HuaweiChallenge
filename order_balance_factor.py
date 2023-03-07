@@ -1,8 +1,13 @@
+## --- XU YAXUAN --- ##
+
 import pandas as pd
 import numpy as np
 import sys
 sys.setrecursionlimit(20000)
 
+tick_b = [f'buying_volume{i}' for i in range(1,11)]
+
+tick_a = [f'selling_volume{i}' for i in range(1,11)]
 
 def voi(tick_data):
     """
@@ -245,17 +250,11 @@ def soir(tick_data):
         """
         w = [1 - (i - 1) / 10 for i in range(1, 11)]
         w = np.array(w) / sum(w)
-        
-        
-        w_b = sum([tick_data_ind[tick_b[i]]*w[i] for i in range(10)])
-        w_a = sum([tick_data_ind[tick_a[i]]*w[i] for i in range(10)])
-        data  = tick_data_ind
-        wb, wa = cal_weight_volume(tick_data_ind)
-
-        data.index = data['tick_time']
-
-        tick_fac_data = (wb-wa)/(wb+wa)
-        
+        soir_v = lambda vb, va: (vb - va) / (vb + va)
+        soir_list = np.array([np.array(soir_v(tick_data_ind[tick_b[i]], tick_data_ind[tick_a[i]])) for i in range(10)])
+        tick_fac_data = np.matmul(soir_list.transpose(), w)
+        tick_fac_data = pd.Series(tick_fac_data)
+        tick_fac_data.index = tick_data_ind['tick_time']
         return tick_fac_data
     
     ans = tick_data.groupby(by = 'stock_code').apply(func = soir_ind)
